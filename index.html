@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>猜猜他是誰？台灣政治人物懷舊猜謎</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF4F2; --paper:#FFFFFF; --ink:#12343B; --ink-soft:#4A6168;
+  --teal:#028090; --teal-soft:#D5ECEC; --orange:#E8552D; --amber:#F4A93C;
+  --amber-soft:#FDF0D8; --ok:#2E8B57; --line:#C9DAD7; --shadow:0 10px 30px rgba(18,52,59,.14);
+  --sans:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;
+  --serif:"Noto Serif TC","PMingLiU","Songti TC",serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F2428; --paper:#183539; --ink:#F1F6F5; --ink-soft:#B6CACA;
+    --teal:#4CC3CF; --teal-soft:#1E4A50; --orange:#FF7A55; --amber:#F7BC5E;
+    --amber-soft:#3A3220; --ok:#5ECF8F; --line:#2E5258; --shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F2428; --paper:#183539; --ink:#F1F6F5; --ink-soft:#B6CACA;
+  --teal:#4CC3CF; --teal-soft:#1E4A50; --orange:#FF7A55; --amber:#F7BC5E;
+  --amber-soft:#3A3220; --ok:#5ECF8F; --line:#2E5258; --shadow:0 10px 30px rgba(0,0,0,.4);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:22px;line-height:1.55;
+  background-image:radial-gradient(var(--line) 1.2px,transparent 1.2px);background-size:26px 26px}
+button{font-family:inherit;cursor:pointer;color:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:4px solid var(--amber);outline-offset:3px}
+
+/* top bar */
+.bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px clamp(14px,3vw,36px);
+  background:var(--teal);color:#fff}
+.bar h1{font-family:var(--serif);font-weight:900;font-size:clamp(1.3rem,2.6vw,1.9rem);margin:0;letter-spacing:.04em;flex:1;min-width:220px}
+.progress{font-size:1.15rem;font-weight:700;background:rgba(255,255,255,.18);padding:4px 16px;border-radius:999px;white-space:nowrap}
+.tool{background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.5);color:#fff;border-radius:12px;
+  padding:6px 14px;font-size:1rem;font-weight:700}
+.tool:hover{background:rgba(255,255,255,.28)}
+
+/* stage */
+.stage{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(18px,3vw,44px);
+  padding:clamp(16px,3vw,40px);max-width:1500px;margin:0 auto;align-items:start}
+@media (max-width:860px){.stage{grid-template-columns:1fr}}
+
+/* old album photo */
+.album{position:relative;background:var(--paper);padding:clamp(14px,2vw,26px);box-shadow:var(--shadow);
+  transform:rotate(-1.2deg);border-radius:4px}
+.album .q{font-family:var(--serif);font-weight:900;font-size:clamp(1.6rem,3.4vw,2.6rem);text-align:center;margin:0 0 12px;color:var(--orange);letter-spacing:.06em}
+.frame{position:relative;aspect-ratio:4/5;background:#DCE5E3;overflow:hidden;border-radius:2px}
+.frame img{width:100%;height:100%;object-fit:cover;object-position:center 22%;display:block;transition:filter .5s}
+.corner{position:absolute;width:44px;height:44px;background:var(--ink);z-index:2;opacity:.88}
+.corner.tl{top:-2px;left:-2px;clip-path:polygon(0 0,100% 0,0 100%)}
+.corner.tr{top:-2px;right:-2px;clip-path:polygon(0 0,100% 0,100% 100%)}
+.corner.bl{bottom:-2px;left:-2px;clip-path:polygon(0 0,0 100%,100% 100%)}
+.corner.br{bottom:-2px;right:-2px;clip-path:polygon(100% 0,100% 100%,0 100%)}
+.nophoto{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  color:#5d7479;text-align:center;padding:20px}
+.nophoto svg{width:55%;max-width:260px}
+.nophoto p{margin:0;font-size:1rem;font-weight:700}
+.nophoto button{margin-top:4px;background:var(--teal);color:#fff;border:0;border-radius:12px;padding:8px 18px;font-size:1rem;font-weight:700}
+
+/* hints */
+.panel{display:flex;flex-direction:column;gap:14px}
+.hint{display:grid;grid-template-columns:62px 1fr;align-items:stretch;background:var(--paper);border-radius:16px;
+  box-shadow:var(--shadow);overflow:hidden;min-height:92px;border:3px solid transparent}
+.hint .num{display:flex;align-items:center;justify-content:center;background:var(--teal-soft);color:var(--teal);
+  font-family:var(--serif);font-weight:900;font-size:2rem}
+.hint .body{padding:12px 18px;display:flex;flex-direction:column;justify-content:center}
+.hint .lab{font-size:.95rem;font-weight:700;color:var(--ink-soft)}
+.hint .txt{font-size:clamp(1.35rem,2.3vw,1.8rem);font-weight:700;line-height:1.4}
+.hint.locked .txt{color:var(--ink-soft);opacity:.5;font-weight:500}
+.hint.open{border-color:var(--amber);animation:pop .45s ease}
+.hint.open .num{background:var(--amber);color:var(--ink)}
+.hint .big{font-family:var(--serif);font-size:3rem;color:var(--orange);line-height:1}
+@keyframes pop{0%{transform:scale(.96)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px}
+.opt{border:3px solid var(--teal);background:var(--paper);border-radius:14px;padding:10px 6px;
+  font-family:var(--serif);font-weight:900;font-size:clamp(1.3rem,2.4vw,1.9rem)}
+.opt:hover{background:var(--teal-soft)}
+.opt.right{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{opacity:.35;text-decoration:line-through;animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@media (max-width:520px){.opts{grid-template-columns:1fr}}
+
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}
+.btn{border:0;border-radius:16px;padding:14px 26px;font-size:clamp(1.25rem,2.2vw,1.6rem);font-weight:900;box-shadow:var(--shadow);flex:1;min-width:180px}
+.btn.hintb{background:var(--amber);color:#12343B}
+.btn.reveal{background:var(--orange);color:#fff}
+.btn:disabled{opacity:.45;cursor:default}
+.navrow{display:flex;gap:12px}
+.nav{flex:1;background:var(--paper);border:3px solid var(--line);border-radius:14px;padding:10px;font-size:1.2rem;font-weight:700}
+
+/* reveal */
+.overlay{position:fixed;inset:0;background:rgba(10,30,34,.6);display:none;align-items:center;justify-content:center;z-index:20;
+  padding:max(16px,env(safe-area-inset-top,0px)) 16px max(16px,env(safe-area-inset-bottom,0px))}
+.overlay.show{display:flex}
+.card{background:var(--paper);border-radius:22px;max-width:1080px;width:100%;max-height:100%;overflow:auto;
+  display:grid;grid-template-columns:300px 1fr;box-shadow:0 30px 60px rgba(0,0,0,.35);animation:rise .5s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes rise{from{transform:translateY(40px) scale(.95);opacity:0}to{transform:none;opacity:1}}
+.card .ph{background:var(--teal);padding:22px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.card .ph .mini{width:100%;aspect-ratio:4/5;background:#DCE5E3;overflow:hidden;border:8px solid #fff}
+.card .ph img{width:100%;height:100%;object-fit:cover;object-position:center 22%}
+.card .ph a{color:#fff;font-size:.85rem}
+.card .info{padding:clamp(18px,3vw,36px)}
+.card .name{font-family:var(--serif);font-weight:900;font-size:clamp(2.6rem,6vw,4.4rem);line-height:1.1;margin:0;letter-spacing:.08em}
+.card .meta{font-size:1.15rem;color:var(--ink-soft);font-weight:700;margin:6px 0 16px}
+.card .meta span{display:inline-block;background:var(--teal-soft);color:var(--ink);padding:2px 12px;border-radius:999px;margin:4px 6px 0 0}
+.points{list-style:none;padding:0;margin:0 0 16px;display:grid;gap:8px}
+.points li{font-size:clamp(1.25rem,2.2vw,1.6rem);font-weight:700;padding:8px 14px 8px 18px;border-left:8px solid var(--amber);background:var(--amber-soft);border-radius:0 12px 12px 0}
+.talk{border:3px dashed var(--teal);border-radius:16px;padding:12px 18px;font-size:clamp(1.2rem,2vw,1.5rem);font-weight:700}
+.talk b{color:var(--teal);display:block;font-size:1rem}
+.card .row{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+.card .row .btn{min-width:150px}
+.btn.next{background:var(--teal);color:#fff}
+.btn.close{background:var(--line);color:var(--ink)}
+@media (max-width:760px){.card{grid-template-columns:1fr}.card .ph .mini{max-width:200px}}
+
+/* photo manager */
+.mgr{background:var(--paper);border-radius:20px;max-width:1100px;width:100%;max-height:100%;overflow:auto;padding:clamp(16px,3vw,30px)}
+.mgr h2{font-family:var(--serif);margin:0 0 6px;font-size:1.8rem}
+.mgr p{margin:0 0 14px;font-size:1.05rem;color:var(--ink-soft)}
+.mgr .top{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.item{border:2px solid var(--line);border-radius:14px;padding:10px;text-align:center}
+.item .th{aspect-ratio:4/5;background:#DCE5E3;border-radius:8px;overflow:hidden;margin-bottom:6px;display:flex;align-items:center;justify-content:center;color:#5d7479;font-size:2.4rem;font-weight:900}
+.item .th img{width:100%;height:100%;object-fit:cover;object-position:center 22%}
+.item .nm{font-weight:900;font-size:1.15rem}
+.item .src{font-size:.85rem;color:var(--ink-soft)}
+.item .b{display:flex;gap:6px;justify-content:center;margin-top:6px}
+.sm{border:2px solid var(--teal);background:transparent;color:var(--teal);border-radius:10px;padding:4px 10px;font-size:.95rem;font-weight:700}
+.sm.fill{background:var(--teal);color:#fff}
+.hidden{display:none!important}
+
+/* start */
+.start .box{background:var(--paper);border-radius:24px;padding:clamp(22px,4vw,48px);max-width:720px;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,.35)}
+.start h2{font-family:var(--serif);font-weight:900;font-size:clamp(2rem,5vw,3.2rem);margin:0 0 10px;color:var(--teal)}
+.start p{font-size:1.25rem;margin:0 0 20px}
+.start .opts2{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:30}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <h1>猜猜他是誰？台灣政治人物懷舊猜謎</h1>
+  <span class="progress" id="progress">第 1 / 20 位</span>
+  <button class="tool" id="btnPhotos">照片管理</button>
+  <button class="tool" id="btnSound">音效：開</button>
+  <button class="tool" id="btnTheme">深色</button>
+</header>
+
+<main class="stage">
+  <section class="album" aria-label="人物照片">
+    <p class="q">猜猜他是誰？</p>
+    <div class="frame" id="frame">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <img id="photo" alt="待猜人物照片" class="hidden">
+      <div class="nophoto" id="nophoto">
+        <svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="72" r="42" fill="#9DB2B0"/><path d="M28 190c6-48 36-70 72-70s66 22 72 70z" fill="#9DB2B0"/><text x="100" y="88" text-anchor="middle" font-size="58" font-weight="900" fill="#fff" font-family="serif">?</text></svg>
+        <p id="nophotoMsg">這一位還沒有照片</p>
+        <button id="quickUpload">上傳這位的照片</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-live="polite">
+    <div class="hint locked" id="h1"><div class="num">1</div><div class="body"><span class="lab">第一個特徵</span><span class="txt">按「給提示」打開</span></div></div>
+    <div class="hint locked" id="h2"><div class="num">2</div><div class="body"><span class="lab">第二個特色</span><span class="txt">還沒打開</span></div></div>
+    <div class="hint locked" id="h3"><div class="num">3</div><div class="body"><span class="lab">名字的第一個字</span><span class="txt">還沒打開</span></div></div>
+    <div class="hint locked" id="h4"><div class="num">4</div><div class="body"><span class="lab">三選一</span><span class="txt">還沒打開</span><div class="opts hidden" id="opts"></div></div></div>
+    <div class="actions">
+      <button class="btn hintb" id="btnHint">給提示</button>
+      <button class="btn reveal" id="btnReveal">公布答案</button>
+    </div>
+    <div class="navrow">
+      <button class="nav" id="btnPrev">上一位</button>
+      <button class="nav" id="btnNext">下一位</button>
+    </div>
+  </section>
+</main>
+
+<!-- start -->
+<div class="overlay start show" id="start">
+  <div class="box">
+    <h2>猜猜他是誰？</h2>
+    <p>收錄 1985 到 2010 年代的 20 位台灣政治人物。看照片猜猜看，猜不出來就按「給提示」，一共有 4 個提示。</p>
+    <div class="opts2">
+      <button class="btn reveal" id="startShuffle">隨機順序開始</button>
+      <button class="btn next" id="startOrder">依年代順序開始</button>
+    </div>
+  </div>
+</div>
+
+<!-- reveal -->
+<div class="overlay" id="reveal" role="dialog" aria-modal="true" aria-label="答案">
+  <div class="card">
+    <div class="ph"><div class="mini"><img id="rPhoto" alt=""></div><a id="rSrc" target="_blank" rel="noopener" class="hidden">照片來源：維基百科</a></div>
+    <div class="info">
+      <h2 class="name" id="rName"></h2>
+      <div class="meta" id="rMeta"></div>
+      <ul class="points" id="rPoints"></ul>
+      <div class="talk" id="rTalk"></div>
+      <div class="row">
+        <button class="btn close" id="rClose">回到照片</button>
+        <button class="btn next" id="rNext">下一位</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- photo manager -->
+<div class="overlay" id="mgr" role="dialog" aria-modal="true" aria-label="照片管理">
+  <div class="mgr">
+    <h2>照片管理</h2>
+    <p>上傳的照片只存在這台裝置的瀏覽器裡。批次上傳時，檔名包含人名就會自動對應，例如「李登輝.jpg」。沒有上傳時，若網路允許會自動從維基百科帶入照片。</p>
+    <div class="top">
+      <button class="sm fill" id="batchBtn">批次上傳（依檔名對應）</button>
+      <button class="sm" id="clearAll">清除全部上傳照片</button>
+      <button class="sm" id="mgrClose">完成</button>
+    </div>
+    <div class="grid" id="mgrGrid"></div>
+  </div>
+</div>
+
+<input type="file" accept="image/*" id="fileOne" class="hidden">
+<input type="file" accept="image/*" id="fileBatch" multiple class="hidden">
+<canvas id="fx"></canvas>
+
+<script>
+const PEOPLE = [
+ {id:"jck",name:"蔣經國",g:"m",years:"1910–1988",party:"中國國民黨",
+  h1:"常穿夾克、戴帽子，喜歡下鄉走訪民間",
+  h2:"1987 年宣布解除戒嚴，也開放民眾赴大陸探親",
+  pts:["總統（1978–1988）","行政院長任內推動十大建設","1987 年解除戒嚴","開放大陸探親"],
+  talk:"十大建設裡，您走過或用過哪一項？例如中山高速公路、桃園機場。"},
+ {id:"ldh",name:"李登輝",g:"m",years:"1923–2020",party:"中國國民黨（任總統時）",
+  h1:"身材高大，是農業經濟學博士，日語非常流利",
+  h2:"1996 年台灣第一次總統直選，由他當選",
+  pts:["台北市長、台灣省主席、副總統","1988 年接任總統","1996 年首次總統直選當選","美國康乃爾大學農經博士"],
+  talk:"1996 年第一次自己投票選總統，您還記得那天的情形嗎？"},
+ {id:"hbc",name:"郝柏村",g:"m",years:"1919–2020",party:"中國國民黨",
+  h1:"軍人出身，當過參謀總長和國防部長",
+  h2:"1990 年代初擔任行政院長，施政重點是治安",
+  pts:["參謀總長（1981–1989）","行政院長（1990–1993）","重視治安、掃黑","活過百歲"],
+  talk:"您或家人當兵時，有什麼難忘的故事？"},
+ {id:"lyg",name:"林洋港",g:"m",years:"1927–2013",party:"中國國民黨",
+  h1:"南投人，大家叫他「阿港伯」",
+  h2:"當過台北市長、台灣省主席，也當過司法院長",
+  pts:["台北市長（1976–1978）","台灣省主席","司法院長（1987–1994）","1996 年參選總統"],
+  talk:"您對以前的「台灣省政府」還有印象嗎？"},
+ {id:"lc",name:"連戰",g:"m",years:"1936 年生",party:"中國國民黨",
+  h1:"出身台南世家，祖父連橫寫了《台灣通史》",
+  h2:"1996 年和李登輝搭檔，當選副總統",
+  pts:["行政院長（1993–1997）","副總統（1996–2000）","國民黨主席（2000–2005）","2005 年訪問大陸"],
+  talk:"您讀書時，有沒有讀過或聽過《台灣通史》？"},
+ {id:"scy",name:"宋楚瑜",g:"m",years:"1942 年生",party:"中國國民黨，後創親民黨",
+  h1:"1990 年代常下鄉，號稱走遍全台 309 個鄉鎮",
+  h2:"台灣第一位、也是唯一一位民選省長",
+  pts:["行政院新聞局長","台灣省長（1994–1998）","2000 年參選總統","創立親民黨"],
+  talk:"以前有沒有大官來過您住的鄉鎮？那時候熱不熱鬧？"},
+ {id:"wjp",name:"王金平",g:"m",years:"1941 年生",party:"中國國民黨",
+  h1:"高雄路竹人，個性圓融，人稱「公道伯」",
+  h2:"擔任立法院長 17 年，是任期最久的院長",
+  pts:["立法院長（1999–2016）","擅長協調不同黨派","長年擔任立法委員","高雄路竹出身"],
+  talk:"您身邊有沒有很會「打圓場」的人？他有什麼本事？"},
+ {id:"wbx",name:"吳伯雄",g:"m",years:"1939 年生",party:"中國國民黨",
+  h1:"桃園中壢的客家人，大家叫他「伯公」",
+  h2:"當過桃園縣長、內政部長，也當過台北市長",
+  pts:["桃園縣長","內政部長","台北市長（1988–1990）","國民黨主席（2007–2009）"],
+  talk:"您會說幾句客家話嗎？教大家說一句看看。"},
+ {id:"myj",name:"馬英九",g:"m",years:"1950 年生",party:"中國國民黨",
+  h1:"喜歡慢跑、游泳，常被拍到穿運動服跑步",
+  h2:"當過台北市長，2008 年當選總統",
+  pts:["法務部長（1993–1996）","台北市長（1998–2006）","總統（2008–2016）","哈佛大學法學博士"],
+  talk:"您有固定運動的習慣嗎？最常做哪一種？"},
+ {id:"hzq",name:"胡志強",g:"m",years:"1948 年生",party:"中國國民黨",
+  h1:"英文很好，當過新聞局長和外交部長",
+  h2:"擔任台中市長 13 年，說話幽默",
+  pts:["行政院新聞局長","外交部長（1997–1999）","台中市長（2001–2014）","擅長演講、很有親和力"],
+  talk:"您去過台中嗎？對台中印象最深的是什麼？"},
+ {id:"zsk",name:"趙少康",g:"m",years:"1950 年生",party:"新黨（創黨成員）",
+  h1:"年紀很輕就當選立委，後來擔任環保署長",
+  h2:"1993 年參與創立新黨，後來成為廣播節目主持人",
+  pts:["立法委員","環保署長（1991–1992）","新黨創黨成員","1994 年參選台北市長"],
+  talk:"您以前最常聽哪個廣播節目？"},
+ {id:"hxj",name:"黃信介",g:"m",years:"1928–1999",party:"民主進步黨",
+  h1:"大家叫他「信介仙」，說話幽默風趣",
+  h2:"《美麗島》雜誌發行人，後來擔任民進黨主席",
+  pts:["早期黨外運動代表人物","《美麗島》雜誌發行人","民進黨主席（1988–1991）","立法委員"],
+  talk:"那個年代，大家都從哪裡得到新聞消息？"},
+ {id:"ycyy",name:"余陳月瑛",g:"f",years:"1926–2012",party:"民主進步黨",
+  h1:"高雄地方政治家族「余家」的代表人物",
+  h2:"高雄縣第一位女縣長",
+  pts:["高雄縣長（1985–1993）","曾任省議員","女性從政先驅","出身高雄地方望族"],
+  talk:"您那個年代，女生出來做事、當主管，常見嗎？"},
+ {id:"xxl",name:"許信良",g:"m",years:"1941 年生",party:"民主進步黨（曾任主席）",
+  h1:"1977 年桃園縣長選舉發生「中壢事件」，最後他當選",
+  h2:"兩度擔任民進黨主席，2000 年獨立參選總統",
+  pts:["桃園縣長（1977）","民進黨主席（兩任）","2000 年參選總統","出身桃園中壢"],
+  talk:"以前選舉時，您住的地方有什麼熱鬧的場面？"},
+ {id:"csb",name:"陳水扁",g:"m",years:"1950 年生",party:"民主進步黨",
+  h1:"台南官田農家出身，大家叫他「阿扁」",
+  h2:"當過台北市長，2000 年當選總統",
+  pts:["律師出身","台北市長（1994–1998）","總統（2000–2008）","台灣首次中央政黨輪替"],
+  talk:"2000 年那時候，您在做什麼工作？住在哪裡？"},
+ {id:"lxl",name:"呂秀蓮",g:"f",years:"1944 年生",party:"民主進步黨",
+  h1:"很早就推動婦女運動，提出「新女性主義」",
+  h2:"台灣第一位女性副總統",
+  pts:["桃園縣長（1997–2000）","副總統（2000–2008）","婦女運動先驅","哈佛大學法學碩士"],
+  talk:"您覺得現在的女性，和您年輕時比起來有什麼不同？"},
+ {id:"xct",name:"謝長廷",g:"m",years:"1946 年生",party:"民主進步黨",
+  h1:"律師出身，曾到日本京都大學念書",
+  h2:"擔任高雄市長，後來當過行政院長",
+  pts:["高雄市長（1998–2005）","行政院長（2005–2006）","2008 年參選總統","駐日代表（2016–2024）"],
+  talk:"您去過日本嗎？最喜歡日本的什麼？"},
+ {id:"szc",name:"蘇貞昌",g:"m",years:"1947 年生",party:"民主進步黨",
+  h1:"光頭造型，人稱「電火球」，做事很有衝勁",
+  h2:"當過屏東縣長、台北縣長，兩度擔任行政院長",
+  pts:["屏東縣長（1989–1993）","台北縣長（1997–2004）","行政院長（2006–2007、2019–2023）","律師出身"],
+  talk:"「電火球」這種綽號很好記，您年輕時有綽號嗎？"},
+ {id:"yxk",name:"游錫堃",g:"m",years:"1948 年生",party:"民主進步黨",
+  h1:"宜蘭縣長任內，開辦了宜蘭國際童玩節",
+  h2:"擔任行政院長，後來也當過立法院長",
+  pts:["宜蘭縣長（1989–1997）","行政院長（2002–2005）","立法院長（2020–2024）","農家出身"],
+  talk:"您小時候都玩什麼童玩？"},
+ {id:"cj",name:"陳菊",g:"f",years:"1950 年生",party:"民主進步黨",
+  h1:"大家親切地叫她「花媽」",
+  h2:"擔任高雄市長 12 年，任內舉辦世界運動會",
+  pts:["勞委會主委（2000–2005）","高雄市長（2006–2018）","2009 年高雄世界運動會","監察院長（2020 年就任）"],
+  talk:"您有沒有去過高雄？那裡哪裡最好玩？"}
+];
+const WIKI = {jck:"蔣經國",ldh:"李登輝",hbc:"郝柏村",lyg:"林洋港",lc:"連戰",scy:"宋楚瑜",wjp:"王金平",wbx:"吳伯雄",myj:"馬英九",hzq:"胡志強",zsk:"趙少康",hxj:"黃信介",ycyy:"余陳月瑛",xxl:"許信良",csb:"陳水扁",lxl:"呂秀蓮",xct:"謝長廷",szc:"蘇貞昌",yxk:"游錫堃",cj:"陳菊"};
+
+const $ = id => document.getElementById(id);
+let order = PEOPLE.map((_,i)=>i), cur = 0, level = 0, options = [], soundOn = true;
+const wikiImg = {};
+
+/* ---------- storage ---------- */
+const KEY = "pg_photo_";
+function getPhoto(id){ try{ return localStorage.getItem(KEY+id); }catch(e){ return null; } }
+function setPhoto(id,data){ try{ localStorage.setItem(KEY+id,data); return true; }catch(e){ alert("照片太多存不下了，請先移除部分照片再試。"); return false; } }
+function delPhoto(id){ try{ localStorage.removeItem(KEY+id); }catch(e){} }
+
+function shrink(file){
+  return new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = () => { const im = new Image(); im.onload = () => {
+        const max = 800, s = Math.min(1, max/Math.max(im.width,im.height));
+        const c = document.createElement("canvas"); c.width = Math.round(im.width*s); c.height = Math.round(im.height*s);
+        c.getContext("2d").drawImage(im,0,0,c.width,c.height); res(c.toDataURL("image/jpeg",.82)); };
+      im.onerror = rej; im.src = r.result; };
+    r.onerror = rej; r.readAsDataURL(file);
+  });
+}
+
+/* ---------- wikipedia photo (works when hosted where network is allowed) ---------- */
+let wikiAll = null;
+function loadAllWiki(){
+  if (wikiAll) return wikiAll;
+  wikiAll = (async () => {
+    const titles = Object.values(WIKI);
+    const url = "https://zh.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=pageimages&piprop=thumbnail"
+      + "&pithumbsize=600&redirects=1&converttitles=1&variant=zh-tw&titles=" + encodeURIComponent(titles.join("|"));
+    try{
+      const j = await (await fetch(url)).json(), q = j.query || {};
+      const map = {};
+      [...(q.normalized||[]),...(q.converted||[]),...(q.redirects||[])].forEach(x=>map[x.from]=x.to);
+      const final = t => { let n=0; while(map[t] && n++<5) t = map[t]; return t; };
+      const pages = {}; Object.values(q.pages||{}).forEach(pg=>pages[pg.title]=pg);
+      for (const [id,t] of Object.entries(WIKI)){
+        const pg = pages[final(t)];
+        wikiImg[id] = (pg && pg.thumbnail) ? { src: pg.thumbnail.source, page: "https://zh.wikipedia.org/wiki/"+encodeURIComponent(t) } : null;
+      }
+    }catch(e){ for (const id in WIKI) wikiImg[id] = null; }
+  })();
+  return wikiAll;
+}
+async function fetchWiki(p){
+  await loadAllWiki();
+  return wikiImg[p.id] || null;
+}
+async function photoFor(p){
+  const up = getPhoto(p.id); if (up) return {src:up, page:null};
+  return await fetchWiki(p);
+}
+
+/* ---------- sound ---------- */
+let ac = null;
+function tone(freq,dur,type="sine",when=0,vol=.18){
+  if (!soundOn) return; try{
+  ac = ac || new (window.AudioContext||window.webkitAudioContext)();
+  const t = ac.currentTime+when, o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.02); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g).connect(ac.destination); o.start(t); o.stop(t+dur+.05);}catch(e){}
+}
+const sfx = {
+  hint(){ tone(660,.18,"triangle"); tone(990,.25,"triangle",.1); },
+  right(){ [523,659,784,1047].forEach((f,i)=>tone(f,.35,"triangle",i*.11,.2)); },
+  wrong(){ tone(220,.3,"sawtooth",0,.08); tone(180,.35,"sawtooth",.12,.08); },
+  reveal(){ for(let i=0;i<8;i++) tone(140+i*12,.08,"square",i*.06,.05); [523,784,1047].forEach((f,i)=>tone(f,.5,"triangle",.5+i*.12,.2)); },
+  page(){ tone(440,.12,"sine",0,.12); }
+};
+
+/* ---------- confetti ---------- */
+const fx = $("fx"), cx = fx.getContext("2d"); let parts = [], raf = null;
+function resize(){ fx.width = innerWidth; fx.height = innerHeight; } addEventListener("resize",resize); resize();
+function confetti(){
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cols = ["#E8552D","#F4A93C","#028090","#2E8B57","#ffffff"];
+  for(let i=0;i<140;i++) parts.push({x:innerWidth/2,y:innerHeight*.45,vx:(Math.random()-.5)*16,vy:Math.random()*-14-4,r:Math.random()*8+5,c:cols[i%5],a:Math.random()*6,life:120});
+  if (!raf) loop();
+}
+function loop(){
+  cx.clearRect(0,0,fx.width,fx.height);
+  parts.forEach(p=>{ p.vy+=.35; p.x+=p.vx; p.y+=p.vy; p.a+=.2; p.life--; cx.save(); cx.translate(p.x,p.y); cx.rotate(p.a); cx.fillStyle=p.c; cx.fillRect(-p.r/2,-p.r/4,p.r,p.r/2); cx.restore(); });
+  parts = parts.filter(p=>p.life>0 && p.y<fx.height+20);
+  raf = parts.length ? requestAnimationFrame(loop) : (cx.clearRect(0,0,fx.width,fx.height), null);
+}
+
+/* ---------- game ---------- */
+const person = () => PEOPLE[order[cur]];
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+async function showPhoto(){
+  const p = person(), img = $("photo");
+  img.classList.add("hidden"); $("nophoto").classList.remove("hidden"); $("nophotoMsg").textContent = "照片載入中…";
+  const ph = await photoFor(p);
+  if (p !== person()) return;
+  if (ph){ img.onload = () => { img.classList.remove("hidden"); $("nophoto").classList.add("hidden"); };
+    img.onerror = () => { $("nophotoMsg").textContent = "照片載入失敗，可按下方上傳"; }; img.src = ph.src; }
+  else $("nophotoMsg").textContent = "抓不到這一位的照片，可按下方上傳";
+}
+
+function render(){
+  const p = person(); level = 0;
+  $("progress").textContent = `第 ${cur+1} / ${order.length} 位`;
+  ["h1","h2","h3","h4"].forEach(h=>{ const el=$(h); el.classList.remove("open"); el.classList.add("locked"); });
+  $("h1").querySelector(".txt").textContent = "按「給提示」打開";
+  ["h2","h3","h4"].forEach(h=>$(h).querySelector(".txt").textContent="還沒打開");
+  $("h4").querySelector(".txt").classList.remove("hidden");
+  $("opts").classList.add("hidden"); $("opts").innerHTML = "";
+  let pool = PEOPLE.filter(x=>x!==p && x.g===p.g); if (pool.length<2) pool = PEOPLE.filter(x=>x!==p);
+  options = shuffle([p, ...shuffle(pool).slice(0,2)]);
+  $("btnHint").disabled = false; $("btnHint").textContent = "給提示（1/4）";
+  $("btnPrev").disabled = cur===0;
+  $("btnNext").textContent = cur===order.length-1 ? "再玩一輪" : "下一位";
+  showPhoto();
+}
+
+function giveHint(){
+  if (level>=4) return; level++; const p = person(), el = $("h"+level);
+  el.classList.remove("locked"); el.classList.add("open");
+  const t = el.querySelector(".txt");
+  if (level===1) t.textContent = p.h1;
+  if (level===2) t.textContent = p.h2;
+  if (level===3) t.innerHTML = `名字的第一個字是 <span class="big">${p.name[0]}</span>`;
+  if (level===4){ t.classList.add("hidden"); const box=$("opts"); box.classList.remove("hidden");
+    options.forEach(o=>{ const b=document.createElement("button"); b.className="opt"; b.textContent=o.name;
+      b.onclick=()=>pick(b,o); box.appendChild(b); }); }
+  sfx.hint();
+  $("btnHint").disabled = level>=4;
+  $("btnHint").textContent = level>=4 ? "提示都打開了" : `給提示（${level+1}/4）`;
+}
+
+function pick(btn,o){
+  if (btn.classList.contains("wrong")||btn.classList.contains("right")) return;
+  if (o===person()){ btn.classList.add("right"); sfx.right(); confetti();
+    document.querySelectorAll(".opt").forEach(b=>b.disabled=true); setTimeout(reveal,1300); }
+  else { btn.classList.add("wrong"); sfx.wrong(); }
+}
+
+async function reveal(){
+  const p = person();
+  $("rName").textContent = p.name;
+  $("rMeta").innerHTML = `<span>${p.years}</span><span>${p.party}</span>`;
+  $("rPoints").innerHTML = p.pts.map(x=>`<li>${x}</li>`).join("");
+  $("rTalk").innerHTML = `<b>和長輩聊聊</b>${p.talk}`;
+  const ph = await photoFor(p), ri = $("rPhoto"), rs = $("rSrc");
+  if (ph){ ri.src = ph.src; ri.alt = p.name; ri.classList.remove("hidden"); } else { ri.removeAttribute("src"); ri.classList.add("hidden"); }
+  if (ph && ph.page){ rs.href = ph.page; rs.classList.remove("hidden"); } else rs.classList.add("hidden");
+  $("rNext").textContent = cur===order.length-1 ? "再玩一輪" : "下一位";
+  $("reveal").classList.add("show"); sfx.reveal(); confetti();
+  $("rNext").focus();
+}
+function closeReveal(){ $("reveal").classList.remove("show"); }
+function next(){ closeReveal(); if (cur<order.length-1) cur++; else { order = shuffle(order); cur = 0; } sfx.page(); render(); }
+function prev(){ if (cur>0){ cur--; sfx.page(); render(); } }
+
+/* ---------- photo manager ---------- */
+let uploadTarget = null;
+async function buildMgr(){
+  const g = $("mgrGrid"); g.innerHTML = "";
+  for (const p of PEOPLE){
+    const up = getPhoto(p.id), d = document.createElement("div"); d.className = "item";
+    d.innerHTML = `<div class="th">${up?`<img src="${up}" alt="${p.name}">`:"?"}</div><div class="nm">${p.name}</div>
+      <div class="src">${up?"已上傳照片":"使用維基百科照片（若可連線）"}</div>
+      <div class="b"><button class="sm fill" data-up="${p.id}">上傳</button>${up?`<button class="sm" data-del="${p.id}">移除</button>`:""}</div>`;
+    g.appendChild(d);
+    if (!up) fetchWiki(p).then(w=>{ if (w){ d.querySelector(".th").innerHTML = `<img src="${w.src}" alt="${p.name}">`; } });
+  }
+}
+$("mgrGrid").addEventListener("click",e=>{
+  const u = e.target.dataset.up, x = e.target.dataset.del;
+  if (u){ uploadTarget = u; $("fileOne").click(); }
+  if (x){ delPhoto(x); buildMgr(); if (person().id===x) showPhoto(); }
+});
+$("fileOne").addEventListener("change",async e=>{
+  const f = e.target.files[0]; e.target.value = ""; if (!f||!uploadTarget) return;
+  const data = await shrink(f); if (setPhoto(uploadTarget,data)){ if ($("mgr").classList.contains("show")) buildMgr(); if (person().id===uploadTarget) showPhoto(); }
+});
+$("fileBatch").addEventListener("change",async e=>{
+  const files = [...e.target.files]; e.target.value = ""; let n = 0, miss = [];
+  for (const f of files){ const p = PEOPLE.find(x=>f.name.includes(x.name));
+    if (!p){ miss.push(f.name); continue; } if (setPhoto(p.id, await shrink(f))) n++; }
+  buildMgr(); showPhoto();
+  alert(`已對應 ${n} 張照片。` + (miss.length?`\n找不到對應人名的檔案：${miss.join("、")}`:""));
+});
+$("batchBtn").onclick = () => $("fileBatch").click();
+$("clearAll").onclick = () => { if (confirm("確定清除所有上傳的照片嗎？")){ PEOPLE.forEach(p=>delPhoto(p.id)); buildMgr(); showPhoto(); } };
+$("btnPhotos").onclick = () => { buildMgr(); $("mgr").classList.add("show"); };
+$("mgrClose").onclick = () => $("mgr").classList.remove("show");
+$("quickUpload").onclick = () => { uploadTarget = person().id; $("fileOne").click(); };
+
+/* ---------- controls ---------- */
+$("btnHint").onclick = giveHint;
+$("btnReveal").onclick = reveal;
+$("btnNext").onclick = next;
+$("btnPrev").onclick = prev;
+$("rClose").onclick = closeReveal;
+$("rNext").onclick = next;
+$("btnSound").onclick = () => { soundOn = !soundOn; $("btnSound").textContent = "音效：" + (soundOn?"開":"關"); };
+function applyTheme(t){ document.documentElement.setAttribute("data-theme",t); $("btnTheme").textContent = t==="light"?"深色":"淺色"; try{localStorage.setItem("pg_theme",t);}catch(e){} }
+$("btnTheme").onclick = () => applyTheme(document.documentElement.getAttribute("data-theme")==="light"?"dark":"light");
+try{ const t = localStorage.getItem("pg_theme"); if (t) applyTheme(t); }catch(e){}
+function begin(shuf){ order = shuf ? shuffle(PEOPLE.map((_,i)=>i)) : PEOPLE.map((_,i)=>i); cur = 0; $("start").classList.remove("show"); sfx.page(); render(); }
+$("startShuffle").onclick = () => begin(true);
+$("startOrder").onclick = () => begin(false);
+document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{ if (e.target===o && o.id!=="start") o.classList.remove("show"); }));
+addEventListener("keydown",e=>{
+  if ($("start").classList.contains("show") || $("mgr").classList.contains("show")) { if (e.key==="Escape") $("mgr").classList.remove("show"); return; }
+  if (e.key===" "){ e.preventDefault(); if (!$("reveal").classList.contains("show")) giveHint(); }
+  else if (e.key==="Enter" && !$("reveal").classList.contains("show") && document.activeElement.tagName!=="BUTTON"){ reveal(); }
+  else if (e.key==="ArrowRight") next();
+  else if (e.key==="ArrowLeft"){ closeReveal(); prev(); }
+  else if (e.key==="Escape") closeReveal();
+});
+render();
+</script>
+</body>
+</html>
