@@ -367,23 +367,61 @@ function shrink(file){
 
 /* ---------- wikipedia photo (works when hosted where network is allowed) ---------- */
 let wikiAll = null;
+/* 英文維基標題：中文條目抓不到照片時改用 */
+const WIKI_EN = {jck:"Chiang Ching-kuo",ldh:"Lee Teng-hui",hbc:"Hau Pei-tsun",lyg:"Lin Yang-kang",lc:"Lien Chan",scy:"James Soong",wjp:"Wang Jin-pyng",wbx:"Wu Po-hsiung",myj:"Ma Ying-jeou",hzq:"Jason Hu",zsk:"Jaw Shaw-kong",hxj:"Huang Hsin-chieh",ycyy:"Yu Chen Yueh-ying",xxl:"Hsu Hsin-liang",csb:"Chen Shui-bian",lxl:"Annette Lu",xct:"Frank Hsieh",szc:"Su Tseng-chang",yxk:"Yu Shyi-kun",cj:"Chen Chu"};
+/* 中文同名條目（如消歧義頁）的替代標題 */
+const WIKI_ALT = {hzq:["胡志強 (政治人物)","胡志强 (政治人物)"]};
+/* 想指定照片時，可在這裡貼圖片網址，優先使用 */
+const PHOTO_URL = {
+  ycyy:"https://upload.wikimedia.org/wikipedia/zh/5/5b/%E4%BD%99%E9%99%B3%E6%9C%88%E7%91%9B.jpg"
+};
+
+async function pageImages(host, titlesById){
+  const out = {}, list = [...new Set(Object.values(titlesById).flat())];
+  if (!list.length) return out;
+  const url = "https://"+host+"/w/api.php?action=query&format=json&origin=*&prop=pageimages|pageprops&piprop=thumbnail"
+    + "&pithumbsize=600&ppprop=disambiguation&redirects=1&converttitles=1&titles=" + encodeURIComponent(list.join("|"));
+  try{
+    const j = await (await fetch(url)).json(), q = j.query || {}, map = {};
+    [...(q.normalized||[]),...(q.converted||[]),...(q.redirects||[])].forEach(x=>map[x.from]=x.to);
+    const final = t => { let n=0; while(map[t] && n++<5) t = map[t]; return t; };
+    const pages = {}; Object.values(q.pages||{}).forEach(pg=>pages[pg.title]=pg);
+    for (const [id,ts] of Object.entries(titlesById)){
+      for (const t of [].concat(ts)){
+        const pg = pages[final(t)];
+        if (pg && pg.thumbnail && !(pg.pageprops && "disambiguation" in pg.pageprops)){
+          out[id] = { src: pg.thumbnail.source, page: "https://"+host+"/wiki/"+encodeURIComponent(final(t)) }; break; }
+      }
+    }
+  }catch(e){}
+  return out;
+}
+async function wikidataImages(ids){
+  const out = {}; if (!ids.length) return out;
+  const url = "https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*&sites=enwiki&props=claims|sitelinks"
+    + "&titles=" + encodeURIComponent(ids.map(id=>WIKI_EN[id]).join("|"));
+  try{
+    const j = await (await fetch(url)).json();
+    Object.values(j.entities||{}).forEach(en=>{
+      const t = en.sitelinks && en.sitelinks.enwiki && en.sitelinks.enwiki.title;
+      const id = ids.find(i=>WIKI_EN[i]===t);
+      const p18 = en.claims && en.claims.P18 && en.claims.P18[0].mainsnak.datavalue;
+      if (id && p18) out[id] = { src: "https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(p18.value)+"?width=600",
+        page: "https://commons.wikimedia.org/wiki/File:"+encodeURIComponent(p18.value) };
+    });
+  }catch(e){}
+  return out;
+}
 function loadAllWiki(){
   if (wikiAll) return wikiAll;
   wikiAll = (async () => {
-    const titles = Object.values(WIKI);
-    const url = "https://zh.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=pageimages&piprop=thumbnail"
-      + "&pithumbsize=600&redirects=1&converttitles=1&variant=zh-tw&titles=" + encodeURIComponent(titles.join("|"));
-    try{
-      const j = await (await fetch(url)).json(), q = j.query || {};
-      const map = {};
-      [...(q.normalized||[]),...(q.converted||[]),...(q.redirects||[])].forEach(x=>map[x.from]=x.to);
-      const final = t => { let n=0; while(map[t] && n++<5) t = map[t]; return t; };
-      const pages = {}; Object.values(q.pages||{}).forEach(pg=>pages[pg.title]=pg);
-      for (const [id,t] of Object.entries(WIKI)){
-        const pg = pages[final(t)];
-        wikiImg[id] = (pg && pg.thumbnail) ? { src: pg.thumbnail.source, page: "https://zh.wikipedia.org/wiki/"+encodeURIComponent(t) } : null;
-      }
-    }catch(e){ for (const id in WIKI) wikiImg[id] = null; }
+    for (const id in WIKI) wikiImg[id] = PHOTO_URL[id] ? {src:PHOTO_URL[id], page:null} : null;
+    const need = () => Object.keys(WIKI).filter(id=>!wikiImg[id]);
+    const zhT = {}; need().forEach(id=>zhT[id] = [...(WIKI_ALT[id]||[]), WIKI[id]].filter(t=>!(WIKI_ALT[id] && t===WIKI[id])));
+    Object.assign(wikiImg, await pageImages("zh.wikipedia.org", zhT));
+    const enT = {}; need().forEach(id=>enT[id] = WIKI_EN[id]);
+    Object.assign(wikiImg, await pageImages("en.wikipedia.org", enT));
+    Object.assign(wikiImg, await wikidataImages(need()));
   })();
   return wikiAll;
 }
